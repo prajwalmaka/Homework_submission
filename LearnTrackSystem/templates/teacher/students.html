@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Students - LearnTrack{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1><i class="fas fa-users me-2"></i>Manage Students</h1>
+        <p class="text-muted">Enroll and manage students in your classes</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user-graduate me-2"></i>Enrolled Students</h5>
+            </div>
+            <div class="card-body">
+                {% if students %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Classes</th>
+                                    <th>Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-user me-2"></i>{{ student.name }}
+                                    </td>
+                                    <td>{{ student.email }}</td>
+                                    <td>
+                                        {% for enrollment in student.enrollments %}
+                                            {% if enrollment.class_obj.teacher_id == current_user.id %}
+                                                <span class="badge bg-primary me-1">{{ enrollment.class_obj.name }}</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td class="text-muted">{{ student.created_at.strftime('%b %d, %Y') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-user-graduate fa-4x text-muted mb-3"></i>
+                        <h4>No Students Enrolled</h4>
+                        <p class="text-muted">Use the form on the right to enroll your first student</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Enroll Student</h5>
+            </div>
+            <div class="card-body">
+                {% if classes %}
+                    <form method="POST" action="{{ url_for('teacher.enroll_student') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.student_email.label(class="form-label") }}
+                            {{ form.student_email(class="form-control", placeholder="student@example.com") }}
+                            <div class="form-text">Enter the email of a registered student</div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.class_id.label(class="form-label") }}
+                            {{ form.class_id(class="form-select") }}
+                        </div>
+
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chalkboard fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">You need to create a class first</p>
+                        <a href="{{ url_for('teacher.create_class') }}" class="btn btn-primary">Create Class</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if classes %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chalkboard me-2"></i>Your Classes</h5>
+            </div>
+            <div class="card-body">
+                {% for class in classes %}
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <div>
+                        <h6 class="mb-0">{{ class.name }}</h6>
+                        <small class="text-muted">{{ class.enrollments|length }} students enrolled</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Calendar - LearnTrack{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1><i class="fas fa-calendar me-2"></i>Assignment Calendar</h1>
+        <p class="text-muted">View all your assignments and due dates</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-body">
+                <div id="calendar"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Event Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventModalTitle">Assignment Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="eventModalBody">
+                <!-- Event details will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" id="eventActionBtn" class="btn btn-primary">View Assignment</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listWeek'
+        },
+        events: {
+            url: '{{ url_for("main.calendar_events") }}',
+            failure: function() {
+                alert('There was an error while fetching events!');
+            }
+        },
+        eventClick: function(info) {
+            // Show event details in modal
+            const event = info.event;
+            const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+            
+            document.getElementById('eventModalTitle').textContent = event.title;
+            document.getElementById('eventModalBody').innerHTML = `
+                <div class="mb-3">
+                    <strong>Due Date:</strong> ${event.start.toLocaleString()}
+                </div>
+                <div class="mb-3">
+                    <strong>Description:</strong> ${event.extendedProps.description || 'No description'}
+                </div>
+            `;
+            
+            // Set action button based on user role
+            const actionBtn = document.getElementById('eventActionBtn');
+            {% if current_user.is_teacher() %}
+                let urlPrefix = "{{ url_for('teacher.view_submissions', assignment_id=0) }}";
+                actionBtn.href = urlPrefix.replace('0', event.id);
+                actionBtn.textContent = 'View Submissions';
+            {% else %}
+                let urlPrefix = "{{ url_for('student.submit_assignment', assignment_id=0) }}";
+                actionBtn.href = urlPrefix.replace('0', event.id);
+                actionBtn.textContent = 'Submit Assignment';
+            {% endif %}
+            
+            modal.show();
+            
+            // Prevent navigation
+            info.jsEvent.preventDefault();
+        },
+        eventDidMount: function(info) {
+            // Add tooltips
+            info.el.setAttribute('title', info.event.extendedProps.description || info.event.title);
+            
+            // Color code events based on urgency
+            const now = new Date();
+            const eventDate = info.event.start;
+            const daysDiff = Math.ceil((eventDate - now) / (1000 * 60 * 60 * 24));
+            
+            if (daysDiff < 0) {
+                // Overdue
+                info.el.style.backgroundColor = '#dc3545';
+                info.el.style.borderColor = '#dc3545';
+            } else if (daysDiff <= 3) {
+                // Due soon
+                info.el.style.backgroundColor = '#ffc107';
+                info.el.style.borderColor = '#ffc107';
+                info.el.style.color = '#000';
+            } else {
+                // Normal
+                info.el.style.backgroundColor = '#0d6efd';
+                info.el.style.borderColor = '#0d6efd';
+            }
+        },
+        height: 'auto',
+        eventDisplay: 'block',
+        dayMaxEvents: 3,
+        moreLinkClick: 'popover'
+    });
+    
+    calendar.render();
+});
+</script>
+{% endblock %}
