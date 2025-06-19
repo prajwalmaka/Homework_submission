@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}My Assignments - LearnTrack{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="fw-bold"><i class="fas fa-tasks me-2"></i>My Assignments</h1>
+        <p class="text-muted">View and submit your assignments</p>
+    </div>
+</div>
+
+{% if assignments %}
+    <div class="row">
+        {% for assignment in assignments %}
+        {% set submission = submissions.get(assignment.id) %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-lg border-0" style="background: rgba(34, 34, 34, 0.92);">
+                <div class="card-header d-flex justify-content-between align-items-center bg-transparent border-0">
+                    <h6 class="mb-0 fw-semibold">{{ assignment.class_obj.name }}</h6>
+                    <div>
+                        {% if submission %}
+                            {% if submission.is_graded() %}
+                                <span class="badge bg-success">Graded</span>
+                            {% else %}
+                                <span class="badge bg-info">Submitted</span>
+                            {% endif %}
+                        {% elif assignment.is_overdue() %}
+                            <span class="badge bg-danger">Overdue</span>
+                        {% else %}
+                            <span class="badge bg-warning">Pending</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">{{ assignment.title }}</h5>
+                    <p class="card-text text-muted">
+                        {{ assignment.description[:100] + '...' if assignment.description and assignment.description|length > 100 else assignment.description }}
+                    </p>
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>Due: {{ assignment.due_date.strftime('%b %d, %Y at %I:%M %p') }}
+                        </small>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-star me-1"></i>Max Score: {{ assignment.max_score }}
+                        </small>
+                    </div>
+                    {% if assignment.attachment_path %}
+                    <div class="mb-3">
+                        <small>
+                            <i class="fas fa-paperclip me-1"></i>
+                            <a href="{{ url_for('main.download_file', filename=assignment.attachment_path) }}" class="text-decoration-none">
+                                Download Assignment
+                            </a>
+                        </small>
+                    </div>
+                    {% endif %}
+                    {% if submission %}
+                    <div class="mb-3">
+                        <div class="bg-dark bg-opacity-10 p-3 rounded text-light border border-primary-subtle">
+                            <h6 class="fw-semibold">Your Submission:</h6>
+                            <p class="mb-1"><strong>Submitted:</strong> {{ submission.submitted_at.strftime('%b %d, %Y at %I:%M %p') }}</p>
+                            {% if submission.is_late() %}
+                                <span class="badge bg-warning">Late Submission</span>
+                            {% endif %}
+                            {% if submission.is_graded() %}
+                                <p class="mb-1"><strong>Score:</strong> {{ submission.score }}/{{ assignment.max_score }} ({{ "%.1f"|format((submission.score / assignment.max_score) * 100) }}%)</p>
+                                {% if submission.feedback %}
+                                    <p class="mb-0"><strong>Feedback:</strong> {{ submission.feedback }}</p>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Teacher: {{ assignment.creator.name }}</small>
+                        <div>
+                            {% if submission %}
+                                {% if not assignment.is_overdue() %}
+                                    <a href="{{ url_for('student.submit_assignment', assignment_id=assignment.id) }}" class="btn btn-sm btn-outline-primary rounded-pill">
+                                        Update
+                                    </a>
+                                {% endif %}
+                            {% else %}
+                                <a href="{{ url_for('student.submit_assignment', assignment_id=assignment.id) }}" 
+                                   class="btn btn-sm {{ 'btn-danger' if assignment.is_overdue() else 'btn-primary' }} rounded-pill">
+                                    {{ 'Submit (Late)' if assignment.is_overdue() else 'Submit' }}
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="row">
+        <div class="col">
+            <div class="card shadow-lg border-0" style="background: rgba(34, 34, 34, 0.92);">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-tasks fa-4x text-muted mb-4"></i>
+                    <h3>No Assignments</h3>
+                    <p class="text-muted mb-4">You don't have any assignments yet. Check back later or contact your teacher if you think this is an error.</p>
+                    <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary rounded-pill">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

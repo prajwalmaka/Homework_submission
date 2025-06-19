@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Course - Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col d-flex justify-content-between align-items-center">
+        <h1 class="fw-bold"><i class="fas fa-plus me-2"></i>Add New Course</h1>
+        <a href="{{ url_for('admin.admin_courses') }}" class="btn btn-outline-secondary rounded-pill"><i class="fas fa-arrow-left me-1"></i> Back to Courses</a>
+    </div>
+</div>
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow-lg border-0" style="background: rgba(34, 34, 34, 0.92);">
+            <div class="card-header bg-transparent border-0">
+                <h4 class="fw-bold"><i class="fas fa-plus me-2"></i>Add New Course</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label fw-semibold") }}
+                        {{ form.name(class="form-control rounded-pill shadow-sm" + (" is-invalid" if form.name.errors else ""), placeholder="e.g., Physics 101") }}
+                        {% if form.name.errors %}<div class="invalid-feedback">{% for error in form.name.errors %}{{ error }}{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label fw-semibold") }}
+                        {{ form.description(class="form-control rounded-4 shadow-sm", rows="3", placeholder="Course description...") }}
+                        {% if form.description.errors %}<div class="invalid-feedback">{% for error in form.description.errors %}{{ error }}{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="mb-4">
+                        {{ form.teacher_id.label(class="form-label fw-semibold") }}
+                        {{ form.teacher_id(class="form-select rounded-pill shadow-sm" + (" is-invalid" if form.teacher_id.errors else "")) }}
+                        {% if form.teacher_id.errors %}<div class="invalid-feedback">{% for error in form.teacher_id.errors %}{{ error }}{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">Save Course</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

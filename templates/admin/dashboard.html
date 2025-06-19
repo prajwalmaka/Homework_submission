@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - LearnTrack{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="fw-bold"><i class="fas fa-tools me-2"></i>Admin Dashboard</h1>
+        <p class="text-muted">Welcome, {{ current_user.name }}! Here are your platform analytics.</p>
+    </div>
+</div>
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-lg border-0 h-100" style="background: rgba(34, 34, 34, 0.92);">
+            <div class="card-body d-flex flex-column justify-content-between align-items-center">
+                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                <h3 class="fw-bold mb-0">{{ total_users }}</h3>
+                <p class="text-muted mb-0">Total Users</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-lg border-0 h-100" style="background: rgba(34, 34, 34, 0.92);">
+            <div class="card-body d-flex flex-column justify-content-between align-items-center">
+                <i class="fas fa-chalkboard-teacher fa-2x text-success mb-2"></i>
+                <h3 class="fw-bold mb-0">{{ total_courses }}</h3>
+                <p class="text-muted mb-0">Total Courses</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-lg border-0 h-100" style="background: rgba(34, 34, 34, 0.92);">
+            <div class="card-body d-flex flex-column justify-content-between align-items-center">
+                <i class="fas fa-tasks fa-2x text-warning mb-2"></i>
+                <h3 class="fw-bold mb-0">{{ total_assignments }}</h3>
+                <p class="text-muted mb-0">Total Assignments</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card shadow-lg border-0 h-100" style="background: rgba(34, 34, 34, 0.92);">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0"><i class="fas fa-chart-pie me-2"></i>User Role Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="roleChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-lg border-0 h-100" style="background: rgba(34, 34, 34, 0.92);">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0"><i class="fas fa-chart-bar me-2"></i>Recent User Registrations</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="regChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // User Role Pie Chart
+    const roleData = {
+        labels: {{ role_counts.keys()|list|tojson }},
+        datasets: [{
+            data: {{ role_counts.values()|list|tojson }},
+            backgroundColor: [
+                '#0d6efd', // student
+                '#198754', // teacher
+                '#ffc107', // admin
+                '#6c757d'  // other
+            ],
+            borderWidth: 1
+        }]
+    };
+    new Chart(document.getElementById('roleChart'), {
+        type: 'pie',
+        data: roleData,
+        options: {
+            plugins: {
+                legend: { display: true, position: 'bottom' }
+            }
+        }
+    });
+    // Registration Bar Chart
+    const regData = {
+        labels: {{ months|tojson }},
+        datasets: [{
+            label: 'Registrations',
+            data: {{ registrations|tojson }},
+            backgroundColor: '#0d6efd',
+            borderRadius: 8
+        }]
+    };
+    new Chart(document.getElementById('regChart'), {
+        type: 'bar',
+        data: regData,
+        options: {
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

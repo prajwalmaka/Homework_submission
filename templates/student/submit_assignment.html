@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Assignment - LearnTrack{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('student.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('student.assignments') }}">Assignments</a></li>
+                <li class="breadcrumb-item active">{{ assignment.title }}</li>
+            </ol>
+        </nav>
+        <h1 class="fw-bold"><i class="fas fa-upload me-2"></i>{{ "Update" if submission else "Submit" }} Assignment</h1>
+        <p class="text-muted">{{ assignment.class_obj.name }} • Due: {{ assignment.due_date.strftime('%b %d, %Y at %I:%M %p') }}</p>
+        {% if assignment.is_overdue() %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Late Submission:</strong> This assignment is overdue. Your submission will be marked as late.
+            </div>
+        {% endif %}
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4 shadow-lg border-0" style="background: rgba(34, 34, 34, 0.92);">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-file-alt me-2"></i>Assignment Details</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="fw-semibold">{{ assignment.title }}</h6>
+                <p>{{ assignment.description or 'No description provided' }}</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Class:</strong> {{ assignment.class_obj.name }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Max Score:</strong> {{ assignment.max_score }} points
+                    </div>
+                </div>
+                {% if assignment.attachment_path %}
+                <div class="mt-3">
+                    <strong>Assignment File:</strong>
+                    <a href="{{ url_for('main.download_file', filename=assignment.attachment_path) }}" class="btn btn-sm btn-outline-primary ms-2 rounded-pill">
+                        <i class="fas fa-download me-1"></i>Download
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% if submission and submission.is_graded() %}
+        <div class="card mb-4 shadow-lg border-0" style="background: rgba(34, 34, 34, 0.92);">
+            <div class="card-header bg-success text-white bg-opacity-75 border-0">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-star me-2"></i>Previous Grade</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Score:</strong> {{ submission.score }}/{{ assignment.max_score }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Percentage:</strong> {{ "%.1f"|format((submission.score / assignment.max_score) * 100) }}%
+                    </div>
+                </div>
+                {% if submission.feedback %}
+                <div class="mt-3">
+                    <strong>Teacher Feedback:</strong>
+                    <div class="p-3 bg-dark bg-opacity-10 rounded mt-2 text-light border border-primary-subtle">
+                        {{ submission.feedback }}
+                    </div>
+                </div>
+                {% endif %}
+                <div class="mt-3">
+                    <small class="text-muted">Graded on {{ submission.graded_at.strftime('%b %d, %Y at %I:%M %p') }}</small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-lg border-0" style="background: rgba(34, 34, 34, 0.92);">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-upload me-2"></i>
+                    {{ "Update Submission" if submission else "Submit Your Work" }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.submission_text.label(class="form-label fw-semibold") }}
+                        {{ form.submission_text(class="form-control rounded-4 shadow-sm", rows="6", placeholder="Write your submission text here...") }}
+                        {% if form.submission_text.errors %}
+                            <div class="invalid-feedback">{% for error in form.submission_text.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                        <div class="form-text">Optional: Add text-based answers or explanations</div>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.file.label(class="form-label fw-semibold") }}
+                        {{ form.file(class="form-control rounded-pill shadow-sm" + (" is-invalid" if form.file.errors else "")) }}
+                        {% if form.file.errors %}
+                            <div class="invalid-feedback">{% for error in form.file.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                        <div class="form-text">Optional: Upload your work (PDF, DOC, images). Max size: 16MB</div>
+                    </div>
+                    {% if submission and submission.file_path %}
+                    <div class="mb-3">
+                        <strong>Current File:</strong>
+                        <a href="{{ url_for('main.download_file', filename=submission.file_path) }}" class="btn btn-sm btn-outline-primary ms-2 rounded-pill">
+                            <i class="fas fa-download me-1"></i>Download Current
+                        </a>
+                        <div class="form-text text-muted">Upload a new file to replace the current one</div>
+                    </div>
+                    {% endif %}
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class="btn btn-primary rounded-pill fw-bold shadow-sm", value=("Update Submission" if submission else "Submit Assignment")) }}
+                        <a href="{{ url_for('student.assignments') }}" class="btn btn-secondary rounded-pill">Back to Assignments</a>
+                    </div>
+                </form>
+                {% if submission %}
+                <div class="mt-4 p-3 bg-info bg-opacity-10 border border-info rounded">
+                    <h6 class="text-info"><i class="fas fa-info-circle me-2"></i>Already Submitted</h6>
+                    <p class="mb-1"><strong>Submitted:</strong> {{ submission.submitted_at.strftime('%b %d, %Y at %I:%M %p') }}</p>
+                    {% if submission.is_late() %}
+                        <p class="mb-0"><span class="badge bg-warning">Late Submission</span></p>
+                    {% endif %}
+                    <div class="form-text">You can update your submission {{ "but it will reset your grade" if submission.is_graded() else "until the deadline" }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Assignments - LearnTrack{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="fw-bold"><i class="fas fa-tasks me-2"></i>Your Assignments</h1>
+        <p class="text-muted">Manage and track all your assignments</p>
+    </div>
+</div>
+{% if assignments %}
+    <div class="row">
+        {% for assignment in assignments %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-lg border-0" style="background: rgba(34, 34, 34, 0.92);">
+                <div class="card-header d-flex justify-content-between align-items-center bg-transparent border-0">
+                    <h6 class="mb-0 fw-semibold">{{ assignment.class_obj.name }}</h6>
+                    {% if assignment.is_overdue() %}
+                        <span class="badge bg-danger">Overdue</span>
+                    {% else %}
+                        <span class="badge bg-success">Active</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">{{ assignment.title }}</h5>
+                    <p class="card-text text-muted">
+                        {{ assignment.description[:100] + '...' if assignment.description and assignment.description|length > 100 else assignment.description }}
+                    </p>
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>Due: {{ assignment.due_date.strftime('%b %d, %Y at %I:%M %p') }}
+                        </small>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-star me-1"></i>Max Score: {{ assignment.max_score }}
+                        </small>
+                    </div>
+                    {% if assignment.attachment_path %}
+                    <div class="mb-3">
+                        <small>
+                            <i class="fas fa-paperclip me-1"></i>
+                            <a href="{{ url_for('main.download_file', filename=assignment.attachment_path) }}" class="text-decoration-none">
+                                Download Attachment
+                            </a>
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            {{ assignment.submissions|length }} submissions
+                        </small>
+                        <a href="{{ url_for('teacher.view_submissions', assignment_id=assignment.id) }}" class="btn btn-sm btn-primary rounded-pill">
+                            View Submissions
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="row">
+        <div class="col">
+            <div class="card shadow-lg border-0" style="background: rgba(34, 34, 34, 0.92);">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-tasks fa-4x text-muted mb-4"></i>
+                    <h3>No Assignments Yet</h3>
+                    <p class="text-muted mb-4">Create your first assignment to get started with managing homework and tracking student progress.</p>
+                    <a href="{{ url_for('teacher.create_assignment') }}" class="btn btn-primary rounded-pill">
+                        <i class="fas fa-plus me-2"></i>Create Your First Assignment
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}
